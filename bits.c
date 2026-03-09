@@ -1,7 +1,7 @@
 /* 
  * CS:APP Data Lab 
  * 
- * <Please put your name and userid here>
+ * 刘可欣 2248226242
  * 
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
@@ -153,28 +153,29 @@ NOTES:
    - 3 additional Zanabazar Square characters */
 // Rating 1
 /* 
- * tmin - return minimum two's complement integer 
+ * tmin - return minimum two's complement integer  最小补码（最负）-2^31
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 4
  *   Rating: 1
  */
 int tmin(void) {
-  return 2;
+  return 1 << 31;
 }
 /* 
- * upperBits - pads n upper bits with 1's
+ * upperBits - pads n upper bits with 1's //看例子来说不涉及拓展，只是生成一个高n位为1其余补0的数？
  *  You may assume 0 <= n <= 32
- *  Example: upperBits(4) = 0xF0000000
+ *  Example: upperBits(4) = 0xF0000000 一个数高4位是1，其余为0
  *  Legal ops: ! ~ & ^ | + << >>
  *  Max ops: 10
  *  Rating: 1
  */
 int upperBits(int n) {
-  return 2;
+  //return (-1 << (32-n)) * (!!n);  //我错了符号违规。用-1（32个1）为基底，左移使除了前n位都补0；n=0时return 0
+  return (~0 << (32 + (~n+1))) & ((!!n) << 31 >> 31);  //利用x&1=x,x&0=0，所以要全1或全0
 }
 // Rating 2
 /* 
- * sign - return 1 if positive, 0 if zero, and -1 if negative
+ * sign - return 1 if positive, 0 if zero, and -1 if negative 正负0判断
  *  Examples: sign(130) = 1
  *            sign(-23) = -1
  *  Legal ops: ! ~ & ^ | + << >>
@@ -182,7 +183,7 @@ int upperBits(int n) {
  *  Rating: 2
  */
 int sign(int x) {
-    return 2;
+   return (!!x) | !!(x>>31) | (x>>31);
 }
 /* 
 
@@ -200,7 +201,7 @@ int sign(int x) {
 
  */
 int copyBit(int x, int n) {
-  return 2;
+  return ((x >> n) & 1) << 31 >> 31 ;
 }
 /* 
  * fitsBits - return 1 if x can be represented as an 
