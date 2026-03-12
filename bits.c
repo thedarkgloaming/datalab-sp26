@@ -207,13 +207,17 @@ int copyBit(int x, int n) {
  * fitsBits - return 1 if x can be represented as an 
  *  n-bit, two's complement integer.
  *   1 <= n <= 32
- *   Examples: fitsBits(5,3) = 0, fitsBits(-4,3) = 1
+ *   Examples: fitsBits(5,3) = 0, fitsBits(-4,3) = 1 考虑符号位！以及不要溢出了
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 15
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-  return 2;
+  //错误，用排除法做了，n是32会溢出，再看后面也有很大问题以及违规了
+  //return !((x & ~0x80000000) >> n) & ((!(x ^ 0x80000000) | !(x ^ 0x7FFFFFFF)) & !(n ^ 32));
+  int mask = 0x7F;
+  mask = (mask << 24) | (0xFF << 16) | (0xFF << 8) | 0xFF;
+  return !((x & mask) >> (n + ~0));
 }
 /* 
  * anyOddBit - return 1 if any odd-numbered bit in word set to 1
@@ -224,7 +228,8 @@ int fitsBits(int x, int n) {
  *   Rating: 2
  */
 int anyOddBit(int x) {
-    return 2;
+   int mask_1 = (0xAA << 24) | (0xAA << 16) | (0xAA << 8) | 0xAA;
+   return !!(x & mask_1); //清零偶数位若不为0则说明奇数位上有1
 }
 /*
  * distinctNegation - returns 1 if x != -x.
@@ -234,7 +239,7 @@ int anyOddBit(int x) {
  *   Rating: 2
  */
 int distinctNegation(int x) {
-  return 2;
+  return !!(x ^ (~x+1));
 }
 // Rating 3
 /* 
@@ -245,7 +250,15 @@ int distinctNegation(int x) {
  *   Rating: 3
  */
 int isGreater(int x, int y) {
-  return 2;
+   //int minus = x + (~y+1); //会溢出，要解决很麻烦感觉在lab很难实现（判断溢出？
+   //return !(minus >> 31) & (x ^ y);
+   
+   //先判断符号，分两种情况再|，符号相同相减不会溢出
+   int x_sym = (x >> 31) & 1; //取符号位记得考虑算术右移补位，用&1
+   int y_sym = (y >> 31) & 1;
+   int same_diff = x_sym ^ y_sym;
+   int minus_sym = ((x + (~y+1)) >> 31) & 1;
+   return (same_diff & (x_sym ^ 1)) | (!same_diff & !minus_sym);
 }
 /* 
  * isAbsEqual - return 1 if |x| == |y|, and 0 otherwise 
@@ -255,7 +268,7 @@ int isGreater(int x, int y) {
  *   Rating: 3
  */
 int isAbsEqual(int x, int y) {
-    return 2;
+   return 2;
 }
 // Rating 4
 /* howManyBits - return the minimum number of bits required to represent x in
