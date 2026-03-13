@@ -228,8 +228,8 @@ int fitsBits(int x, int n) {
  *   Rating: 2
  */
 int anyOddBit(int x) {
-   int mask_1 = (0xAA << 24) | (0xAA << 16) | (0xAA << 8) | 0xAA;
-   return !!(x & mask_1); //清零偶数位若不为0则说明奇数位上有1
+   int mask = (0xAA << 24) | (0xAA << 16) | (0xAA << 8) | 0xAA;
+   return !!(x & mask); //清零偶数位若不为0则说明奇数位上有1
 }
 /*
  * distinctNegation - returns 1 if x != -x.
@@ -258,17 +258,26 @@ int isGreater(int x, int y) {
    int y_sym = (y >> 31) & 1;
    int same_diff = x_sym ^ y_sym;
    int minus_sym = ((x + (~y+1)) >> 31) & 1;
-   return (same_diff & (x_sym ^ 1)) | (!same_diff & !minus_sym);
+   //return (same_diff & (x_sym ^ 1)) | (!same_diff & !minus_sym); //都为最小负数会出错
+   int result = (same_diff & (x_sym ^ 1)) | (!same_diff & !minus_sym);
+   int if_same = !!(x ^ y) << 31 >> 31; //相同为0，清零result；不同全1，result不变 //记得^是位操作
+   return result & if_same;
 }
 /* 
  * isAbsEqual - return 1 if |x| == |y|, and 0 otherwise 
  *   Examples: isAbsEqual(-5,5) = 1, isAbsEqual(4,5) = 0
- *   Legal ops: ! ^ +
+ *   Legal ops: ! ^ + //注意限制
  *   Max ops: 12
  *   Rating: 3
  */
 int isAbsEqual(int x, int y) {
-   return 2;
+   //x和y异或为0，或者不为零但相加为0
+   //即返回1时两个判断必有一个为1一个为0，除了最小数相加溢出会等于0，所以这种唯一情况两个判断都为1也是返回1
+   int same_diff = !(x ^ y);
+   int plus_sym = !(x + y);
+   //return same_diff | plus_sym; //一不小心就开始用&|了，但这个方法是成功的
+   //改写下在0/1下可以实现和|同样效果的代码，即两者都为0才输出0
+   return !(!(same_diff + plus_sym));
 }
 // Rating 4
 /* howManyBits - return the minimum number of bits required to represent x in
