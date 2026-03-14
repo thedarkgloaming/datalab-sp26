@@ -215,9 +215,13 @@ int copyBit(int x, int n) {
 int fitsBits(int x, int n) {
   //错误，用排除法做了，n是32会溢出，再看后面也有很大问题以及违规了
   //return !((x & ~0x80000000) >> n) & ((!(x ^ 0x80000000) | !(x ^ 0x7FFFFFFF)) & !(n ^ 32));
-  int mask = 0x7F;
-  mask = (mask << 24) | (0xFF << 16) | (0xFF << 8) | 0xFF;
-  return !((x & mask) >> (n + ~0));
+
+  //int mask = 0x7F;
+  //mask = (mask << 24) | (0xFF << 16) | (0xFF << 8) | 0xFF;
+  //return !((x & mask) >> (n + ~0));
+   int shift = 32 + (~n + 1);
+   int y = (x << shift) >> shift;
+   return !(x ^ y);
 }
 /* 
  * anyOddBit - return 1 if any odd-numbered bit in word set to 1
@@ -293,5 +297,31 @@ int isAbsEqual(int x, int y) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+   //找最高有效位，正数找1，负数可以取反找1
+
+   //int x_sym = (x >> 31) & 1;
+   //x = (!x_sym << 31) & x; //写错了，不过可以用来清零符号位
+   int bits = 0, bits_1, bits_2, bits_3, bits_4; //要在函数开头声明？
+
+   int shift = x >> 31; //全0或全1
+   x = (shift & ~x) | (~shift & x);
+   //int bits_15 = 15, sign = bits >> 15 << 15;
+   //bits = (sign >> 15) & bits;
+   //枚举不行，要二分排查，步长16 8 4 2 1
+   bits = !!(x >> 16) << 4 ; //高16位有1则记16，没有则0
+   x = x >> (!!(bits ^ 0) << 4); //bits有变化则清掉低16位，没有则不动
+
+   bits_1 = ((!!(x >> 8)) << 3) + bits; //更新位数
+   x = x >> (!!(bits_1 ^ bits) << 3);
+
+   bits_2 = ((!!(x >> 4)) << 2) + bits_1;
+   x = x >> (!!(bits_2 ^ bits_1) << 2);
+
+   bits_3 = ((!!(x >> 2)) << 1) + bits_2;
+   x = x >> (!!(bits_3 ^ bits_2) << 1);
+
+   bits_4 = (!!(x >> 1)) + bits_3;
+   x = x >> !!(bits_4 ^ bits_3);
+
+   return bits_4 + x + 1; //加上符号位
 }
